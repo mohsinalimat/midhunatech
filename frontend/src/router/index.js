@@ -20,6 +20,7 @@ const routes = [
     children: [
       { path: "",        redirect: "/midhunatech/home" },
       { path: "home",    name: "Home",    component: () => import("@/views/Home.vue") },
+      { path: "checkin", name: "Checkin", component: () => import("@/views/Checkin.vue") },
       { path: "profile", name: "Profile", component: () => import("@/views/Profile.vue") },
     ],
   },

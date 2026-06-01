@@ -14,16 +14,11 @@ def get_context(context):
     Frappe automatically maps it to the URL: yoursite.com/midhunatech
     Same mechanism as HRMS: hrms/www/hrms.py → yoursite.com/hrms
 
-    Guests are redirected to login.
-    Authenticated users get the Vue SPA booted with injected window.__MT__ data.
+    The SPA shell is served to EVERYONE (including guests) so the PWA can
+    render its own polished login screen. The Vue router guard sends
+    unauthenticated users to /midhunatech/login, and login happens in-app
+    via /api/method/login — no bounce to the Frappe desk login page.
     """
-    # v16 redirect pattern — same as frappe/crm, frappe/helpdesk etc.
-    if frappe.session.user == "Guest":
-        frappe.local.flags.redirect_location = (
-            f"/login?redirect-to=/midhunatech"
-        )
-        raise frappe.Redirect
-
     # Get PWA config to inject into window.__MT__
     try:
         cfg = frappe.get_cached_doc("Midhunatech PWA Config")
@@ -35,7 +30,7 @@ def get_context(context):
         context.pwa_theme_color   = "#6366f1"
         context.pwa_primary_color = "#6366f1"
 
-    context.csrf_token    = frappe.session.data.csrf_token
+    context.csrf_token    = frappe.sessions.get_csrf_token()
     context.session_user  = frappe.session.user
     context.session_fname = frappe.utils.get_fullname(frappe.session.user)
     context.site_name     = frappe.local.site

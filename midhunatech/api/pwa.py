@@ -3,6 +3,7 @@
 
 import frappe
 from frappe import _
+from frappe.utils.password import check_password, update_password as _update_password
 
 
 # ── Boot injection ─────────────────────────────────────────────────────────────
@@ -135,3 +136,35 @@ def get_notifications():
         filters={"for_user": frappe.session.user, "read": 0},
     )
     return {"unread": int(count or 0)}
+
+
+@frappe.whitelist()
+def change_password(old_password, new_password):
+    """Change the logged-in user's own password after verifying the current one."""
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw(_("You must be logged in to change your password."))
+
+    if not new_password or len(new_password) < 6:
+        frappe.throw(_("New password must be at least 6 characters."))
+
+    try:
+        check_password(user, old_password)
+    except frappe.AuthenticationError:
+        frappe.throw(_("Your current password is incorrect."))
+
+    from frappe.core.doctype.user.user import test_password_strength
+
+    user_doc = frappe.get_doc("User", user)
+    result = test_password_strength(
+        new_password,
+        user_data=[user_doc.first_name, user_doc.last_name, user_doc.email],
+    )
+    feedback = (result or {}).get("feedback") or {}
+    if feedback.get("password_policy_validation_passed") is False:
+        suggestions = " ".join(feedback.get("suggestions") or [])
+        frappe.throw(_("Password is too weak. {0}").format(suggestions or ""))
+
+    _update_password(user, new_password)
+    frappe.db.commit()
+    return {"ok": True}

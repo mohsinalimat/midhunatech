@@ -71,6 +71,49 @@
         </ion-list>
       </template>
 
+      <!-- ── Security / change password ── -->
+      <div class="section-title">Security</div>
+      <div class="pw-card">
+        <template v-if="!pwOpen">
+          <button class="pw-open-btn" @click="pwOpen = true">
+            <span>🔒 Change password</span>
+            <span style="color:#cbd5e1;">›</span>
+          </button>
+        </template>
+
+        <template v-else>
+          <div class="pw-field">
+            <label>Current password</label>
+            <input v-model="pw.old_password" type="password" autocomplete="current-password" :disabled="pw.busy" />
+          </div>
+          <div class="pw-field">
+            <label>New password</label>
+            <input v-model="pw.new_password" type="password" autocomplete="new-password" :disabled="pw.busy" />
+          </div>
+          <div class="pw-field">
+            <label>Confirm new password</label>
+            <input v-model="pw.confirm" type="password" autocomplete="new-password" :disabled="pw.busy"
+                   @keyup.enter="changePassword" />
+          </div>
+
+          <div v-if="pw.error" class="pw-msg err">{{ pw.error }}</div>
+          <div v-if="pw.done" class="pw-msg ok">✓ Password updated</div>
+
+          <div class="pw-actions">
+            <button class="pw-cancel" :disabled="pw.busy" @click="closePw">Cancel</button>
+            <button
+              class="pw-save"
+              :style="{ background: appConfig.primary_color }"
+              :disabled="pw.busy || !pw.old_password || !pw.new_password"
+              @click="changePassword"
+            >
+              <span v-if="pw.busy" class="mt-spinner" />
+              <span v-else>Update</span>
+            </button>
+          </div>
+        </template>
+      </div>
+
       <!-- ── Logout ── -->
       <div class="logout-wrap">
         <button
@@ -90,17 +133,52 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonList, IonItem, IonLabel,
 } from "@ionic/vue";
-import { session, appConfig, logout } from "@/data/session.js";
+import { session, appConfig, logout, apiFetch } from "@/data/session.js";
 
 const router   = useRouter();
 const busy     = ref(false);
 const hostname = window.location.hostname;
+
+// ── Change password ──────────────────────────────────────────────────────────
+const pwOpen = ref(false);
+const pw = reactive({ old_password: "", new_password: "", confirm: "", busy: false, error: "", done: false });
+
+function closePw() {
+  pwOpen.value = false;
+  pw.old_password = pw.new_password = pw.confirm = "";
+  pw.error = ""; pw.done = false;
+}
+
+async function changePassword() {
+  pw.error = ""; pw.done = false;
+  if (pw.new_password !== pw.confirm) { pw.error = "New passwords do not match."; return; }
+  if (pw.new_password.length < 6)     { pw.error = "New password must be at least 6 characters."; return; }
+  pw.busy = true;
+  try {
+    const r = await apiFetch("/api/method/midhunatech.api.pwa.change_password", {
+      method: "POST",
+      body: JSON.stringify({ old_password: pw.old_password, new_password: pw.new_password }),
+    });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      const msg = (e._server_messages && JSON.parse(e._server_messages)[0]) || e.message || "Could not change password.";
+      throw new Error(String(msg).replace(/.*"message":\s*"/, "").replace(/".*/, "").replace(/<[^>]*>/g, "") || "Could not change password.");
+    }
+    pw.done = true;
+    pw.old_password = pw.new_password = pw.confirm = "";
+    setTimeout(() => { if (pw.done) closePw(); }, 1800);
+  } catch (e) {
+    pw.error = e.message || "Could not change password.";
+  } finally {
+    pw.busy = false;
+  }
+}
 
 const userInitial = computed(() =>
   (session.fullname || session.user || "M")[0].toUpperCase()
@@ -130,6 +208,41 @@ function openDesk()   { window.open("/app",                         "_blank", "n
 .profile-email { font-size: 13px; color: #94a3b8; margin-top: 2px; }
 
 .info-list { border-radius: 14px; margin: 0 16px; overflow: hidden; }
+
+/* ── Change password card ── */
+.pw-card {
+  margin: 0 16px; background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 14px; padding: 6px 16px;
+}
+.pw-open-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  background: none; border: none; padding: 12px 0; cursor: pointer;
+  font-size: 15px; font-weight: 600; color: #334155; -webkit-appearance: none;
+}
+.pw-field { padding: 8px 0; display: flex; flex-direction: column; gap: 5px; }
+.pw-field label { font-size: 12.5px; font-weight: 600; color: #64748b; }
+.pw-field input {
+  width: 100%; padding: 11px 13px; border: 1.5px solid #e2e8f0; border-radius: 11px;
+  font-size: 15px; color: #1e293b; outline: none; background: #f8fafc;
+  -webkit-appearance: none; transition: border-color .15s;
+}
+.pw-field input:focus { border-color: var(--ion-color-primary); background: #fff; }
+.pw-msg { font-size: 12.5px; padding: 8px 0; }
+.pw-msg.err { color: #dc2626; }
+.pw-msg.ok  { color: #16a34a; font-weight: 600; }
+.pw-actions { display: flex; gap: 10px; padding: 10px 0 12px; }
+.pw-cancel {
+  flex: 1; height: 44px; border-radius: 12px; border: 1.5px solid #e2e8f0;
+  background: #fff; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer;
+  -webkit-appearance: none;
+}
+.pw-save {
+  flex: 2; height: 44px; border-radius: 12px; border: none;
+  color: #fff; font-weight: 700; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-appearance: none;
+}
+.pw-save:disabled, .pw-cancel:disabled { opacity: .5; cursor: not-allowed; }
 
 .logout-wrap { padding: 24px 16px 60px; }
 .logout-btn {
