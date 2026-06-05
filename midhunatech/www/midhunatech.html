@@ -52,7 +52,8 @@ window.__MT__ = {
     overscroll-behavior: none; /* prevents iOS bounce on body */
   }
   #app { height: 100%; }
-  /* Hide Frappe default nav/header — PWA has its own */
-  .navbar, .page-head, .footer-toolbar { display: none !important; }
+  /* Hide Frappe default nav/header/footer — PWA has its own */
+  .navbar, .page-head, .footer-toolbar,
+  .web-footer, footer, .footer-powered { display: none !important; }
 </style>
 {%- endblock -%}

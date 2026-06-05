@@ -223,7 +223,7 @@ function openConfig() {
 }
 
 function typeLabel(t) {
-  return { frappe_page: "Frappe", iframe_url: "Web", custom_view: "Built-in" }[t] || t;
+  return { frappe_page: "Frappe", iframe_url: "Web", custom_view: "Built-in", doc_list: "Native" }[t] || t;
 }
 
 const ICON_MAP = {

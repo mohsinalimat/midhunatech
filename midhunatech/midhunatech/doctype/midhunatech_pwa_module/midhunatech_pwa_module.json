@@ -66,17 +66,17 @@
    "fieldname": "module_type",
    "fieldtype": "Select",
    "label": "Module Type",
-   "options": "frappe_page\niframe_url\ncustom_view",
+   "options": "frappe_page\niframe_url\ncustom_view\ndoc_list",
    "default": "frappe_page",
    "reqd": 1,
    "in_list_view": 1,
-   "description": "frappe_page = Frappe desk URL in fullscreen iframe | iframe_url = any HTTPS URL | custom_view = built-in Vue component"
+   "description": "frappe_page = Frappe desk URL in fullscreen iframe | iframe_url = any HTTPS URL | custom_view = built-in Vue component | doc_list = native mobile list/detail for a doctype"
   },
   {
    "fieldname": "target_url",
    "fieldtype": "Data",
    "label": "Target URL",
-   "description": "frappe_page: /app/leave-application | iframe_url: https://... | custom_view: leave blank"
+   "description": "frappe_page: /app/leave-application | iframe_url: https://... | custom_view: leave blank | doc_list: the Doctype name, e.g. Sales Order"
   },
   {
    "fieldname": "col_break_2",

@@ -12,8 +12,11 @@
           />
         </ion-buttons>
         <ion-title>{{ currentMod?.label || "Loading…" }}</ion-title>
-        <!-- Open in new tab — useful for frappe_page / iframe_url -->
-        <ion-buttons v-if="currentMod?.url" slot="end">
+        <!-- Open in new tab — useful for frappe_page / iframe_url only -->
+        <ion-buttons
+          v-if="currentMod?.url && (currentMod.type === 'frappe_page' || currentMod.type === 'iframe_url')"
+          slot="end"
+        >
           <ion-button @click="openExternal" aria-label="Open in browser">
             <ion-icon slot="icon-only" :icon="openOutline" />
           </ion-button>
@@ -22,6 +25,15 @@
     </ion-header>
 
     <ion-content :fullscreen="true">
+
+      <!-- Pull to refresh — native doc_list only -->
+      <ion-refresher
+        v-if="currentMod && currentMod.type === 'doc_list'"
+        slot="fixed"
+        @ionRefresh="onDocRefresh"
+      >
+        <ion-refresher-content refreshing-spinner="crescent" />
+      </ion-refresher>
 
       <!-- ── Config not loaded ── -->
       <div v-if="!appConfig.loaded" class="empty-state" style="padding-top:80px;">
@@ -56,6 +68,15 @@
         />
       </template>
 
+      <!-- ── NATIVE DOC LIST: one generic UI for any doctype ── -->
+      <DocList
+        v-else-if="currentMod.type === 'doc_list'"
+        ref="docListRef"
+        :key="currentMod.url"
+        :doctype="currentMod.url"
+        :label="currentMod.label"
+      />
+
       <!-- ── CUSTOM VIEW: dynamic Vue component ── -->
       <Suspense v-else-if="currentMod.type === 'custom_view'">
         <!-- Loaded component -->
@@ -87,12 +108,19 @@ import { useRoute } from "vue-router";
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonButtons, IonBackButton, IonButton, IonIcon, IonSpinner,
+  IonRefresher, IonRefresherContent,
 } from "@ionic/vue";
 import { openOutline, chevronBackOutline } from "ionicons/icons";
 import { appConfig } from "@/data/session.js";
+import DocList from "@/views/modules/DocList.vue";
 
 const route       = useRoute();
 const iframeReady = ref(false);
+const docListRef  = ref(null);
+
+async function onDocRefresh(e) {
+  try { await docListRef.value?.reload(); } finally { e.target.complete(); }
+}
 
 const slug = computed(() => decodeURIComponent(route.params.slug || ""));
 
