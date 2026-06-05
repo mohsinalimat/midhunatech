@@ -22,6 +22,11 @@ def after_install():
     """Runs after `bench --site <site> install-app midhunatech`.
     Auto-configures the PWA so a fresh site is usable immediately."""
     try:
+        seed_number_cards()
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "midhunatech: seed_number_cards failed")
+
+    try:
         seed_default_modules()
     except Exception:
         frappe.log_error(frappe.get_traceback(), "midhunatech: seed_default_modules failed")
@@ -93,6 +98,24 @@ def seed_default_modules():
     order = max([int(r.display_order or 0) for r in cfg.get("modules", [])] or [0])
 
     added = []
+
+    # KPI dashboard tile — first on the grid. Targets the seeded MT cards by
+    # default (clean business KPIs); set target_url blank to show ALL cards,
+    # or to a Dashboard name / comma-separated Number Card names.
+    if "dashboard" not in existing:
+        cfg.append("modules", {
+            "label":         "Dashboard",
+            "module_name":   "dashboard",
+            "icon":          "chart",
+            "color":         "#6366f1",
+            "route_path":    "/dashboard",
+            "module_type":   "dashboard",
+            "target_url":    ",".join(c[0] for c in DEFAULT_CARDS),
+            "display_order": 0,
+            "is_enabled":    1,
+        })
+        added.append("Dashboard")
+
     for label, key, icon, color, route, doctype in NATIVE_MODULES:
         if key in existing:
             continue
@@ -116,6 +139,48 @@ def seed_default_modules():
     frappe.db.commit()
     print(f"Seeded {len(added)} native module(s): {', '.join(added) or '(no new — already configured or doctypes not installed)'}")
     return added
+
+
+# Default KPI cards (Count) seeded on install — guarded by doctype existence.
+# (label, document_type, color)
+DEFAULT_CARDS = [
+    ("MT Total Sales Orders", "Sales Order", "#6366f1"),
+    ("MT Employees",          "Employee",    "#f97316"),
+    ("MT Open Tasks",         "Task",        "#10b981"),
+    ("MT Stock Entries",      "Stock Entry", "#f59e0b"),
+]
+
+
+def seed_number_cards():
+    """Create a few default Frappe Number Cards so the Dashboard tile is useful
+    out of the box. Idempotent; only for doctypes that exist."""
+    if not frappe.db.exists("DocType", "Number Card"):
+        return []
+    made = []
+    for label, doctype, color in DEFAULT_CARDS:
+        if not frappe.db.exists("DocType", doctype):
+            continue
+        if frappe.db.exists("Number Card", {"label": label}):
+            continue
+        try:
+            frappe.get_doc({
+                "doctype":       "Number Card",
+                "label":         label,
+                "type":          "Document Type",
+                "document_type": doctype,
+                "function":      "Count",
+                "filters_json":  "[]",
+                "color":         color,
+                "is_public":     1,
+                "show_percentage_stats": 0,
+            }).insert(ignore_permissions=True)
+            made.append(label)
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), "midhunatech: number card seed")
+    if made:
+        frappe.db.commit()
+    print(f"Seeded {len(made)} number card(s): {', '.join(made) or '(none)'}")
+    return made
 
 
 # Backwards-compatible alias

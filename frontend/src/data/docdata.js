@@ -41,6 +41,9 @@ async function callPost(method, body = {}) {
 export const getView = (doctype, label) =>
   call("midhunatech.api.data.get_view", { doctype, label });
 
+export const getDashboard = (target) =>
+  call("midhunatech.api.data.get_dashboard", { target });
+
 export const getCreateMeta = (doctype) =>
   call("midhunatech.api.data.get_create_meta", { doctype });
 

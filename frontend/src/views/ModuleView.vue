@@ -28,7 +28,7 @@
 
       <!-- Pull to refresh — native doc_list only -->
       <ion-refresher
-        v-if="currentMod && currentMod.type === 'doc_list'"
+        v-if="currentMod && (currentMod.type === 'doc_list' || currentMod.type === 'dashboard')"
         slot="fixed"
         @ionRefresh="onDocRefresh"
       >
@@ -77,6 +77,14 @@
         :label="currentMod.label"
       />
 
+      <!-- ── KPI DASHBOARD: Frappe Number Cards ── -->
+      <DashboardView
+        v-else-if="currentMod.type === 'dashboard'"
+        ref="docListRef"
+        :key="currentMod.url"
+        :target="currentMod.url"
+      />
+
       <!-- ── CUSTOM VIEW: dynamic Vue component ── -->
       <Suspense v-else-if="currentMod.type === 'custom_view'">
         <!-- Loaded component -->
@@ -113,6 +121,7 @@ import {
 import { openOutline, chevronBackOutline } from "ionicons/icons";
 import { appConfig } from "@/data/session.js";
 import DocList from "@/views/modules/DocList.vue";
+import DashboardView from "@/views/modules/DashboardView.vue";
 
 const route       = useRoute();
 const iframeReady = ref(false);

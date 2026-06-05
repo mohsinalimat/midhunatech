@@ -408,3 +408,69 @@ def create_doc(doctype, values):
     doc.insert()
     frappe.db.commit()
     return {"name": doc.name}
+
+
+# ── dashboard (KPI / number cards) ──────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_dashboard(target=None):
+    """Render Frappe Number Cards as KPI cards. `target` may be a Dashboard name,
+    a comma-separated list of Number Card names, or blank (all permitted cards).
+    Only 'Document Type' cards are computed natively (Report/Custom are skipped)."""
+    from frappe.desk.doctype.number_card.number_card import get_result
+
+    names = _resolve_card_names(target)
+    cards = []
+    for name in names:
+        try:
+            card = frappe.get_doc("Number Card", name)
+            if not card.has_permission("read"):
+                continue
+            if (card.type or "Document Type") != "Document Type":
+                continue
+            if not card.document_type or not frappe.has_permission(card.document_type, "read"):
+                continue
+            value = get_result(card.as_dict(), card.get("filters_json") or "[]")
+            cards.append({
+                "name":     card.name,
+                "label":    card.label or card.name,
+                "value":    _fmt_card_value(value, card),
+                "color":    card.get("color") or "#6366f1",
+                "doctype":  card.document_type,
+                "function": card.function,
+            })
+        except Exception:
+            continue
+    return {"cards": cards}
+
+
+def _resolve_card_names(target):
+    if target and frappe.db.exists("Dashboard", target):
+        dash = frappe.get_doc("Dashboard", target)
+        return [c.card for c in dash.get("cards", []) if c.card]
+    if target:
+        names = []
+        for tok in (t.strip() for t in str(target).split(",") if t.strip()):
+            if frappe.db.exists("Number Card", tok):
+                names.append(tok)
+            else:
+                by_label = frappe.db.get_value("Number Card", {"label": tok}, "name")
+                if by_label:
+                    names.append(by_label)
+        return names
+    return frappe.get_all("Number Card", pluck="name", limit_page_length=24,
+                          order_by="modified desc")
+
+
+def _fmt_card_value(value, card):
+    try:
+        if (card.function or "Count") == "Count":
+            return str(int(value))
+        field = card.get("aggregate_function_based_on")
+        meta = frappe.get_meta(card.document_type)
+        df = meta.get_field(field) if field else None
+        if df and df.fieldtype in ("Currency",):
+            return fmt_money(value)
+        return f"{float(value):,.0f}" if float(value).is_integer() else f"{float(value):,.2f}"
+    except Exception:
+        return str(value)

@@ -66,7 +66,7 @@
    "fieldname": "module_type",
    "fieldtype": "Select",
    "label": "Module Type",
-   "options": "frappe_page\niframe_url\ncustom_view\ndoc_list",
+   "options": "frappe_page\niframe_url\ncustom_view\ndoc_list\ndashboard",
    "default": "frappe_page",
    "reqd": 1,
    "in_list_view": 1,
@@ -76,7 +76,7 @@
    "fieldname": "target_url",
    "fieldtype": "Data",
    "label": "Target URL",
-   "description": "frappe_page: /app/leave-application | iframe_url: https://... | custom_view: leave blank | doc_list: the Doctype name, e.g. Sales Order"
+   "description": "frappe_page: /app/leave-application | iframe_url: https://... | custom_view: leave blank | doc_list: the Doctype name, e.g. Sales Order | dashboard: a Dashboard name, comma-separated Number Card names, or blank for all"
   },
   {
    "fieldname": "col_break_2",
