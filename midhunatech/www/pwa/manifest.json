@@ -1,0 +1,21 @@
+{
+  "id": "/pwa",
+  "name": "Midhunatech",
+  "short_name": "Midhunatech",
+  "description": "Midhunatech — Configurable ERPNext PWA",
+  "start_url": "/pwa",
+  "scope": "/pwa",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    { "src": "/assets/midhunatech/images/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/midhunatech/images/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/midhunatech/images/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["business", "productivity"]
+}

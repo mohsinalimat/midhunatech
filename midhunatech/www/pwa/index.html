@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <title>{{ app_name }}</title>
+  <meta name="theme-color" content="{{ theme_color }}">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/pwa/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/midhunatech/images/icon-192.png">
+  <link rel="icon" type="image/png" href="/assets/midhunatech/images/icon-192.png">
+  <style>
+    :root {
+      --primary: {{ primary_color }};
+      --secondary: #8b5cf6;
+      --accent: #22c55e;
+      --bg: #f1f5f9; --card: #ffffff; --ink: #0f172a; --sub: #64748b;
+      --line: #e2e8f0; --muted: #94a3b8; --shadow: 0 1px 10px rgba(15,23,42,.05);
+    }
+    [data-theme="dark"] {
+      --bg: #0b1120; --card: #131c2e; --ink: #e8eefb; --sub: #94a3b8;
+      --line: #233047; --muted: #64748b; --shadow: 0 1px 12px rgba(0,0,0,.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      background: var(--bg); color: var(--ink); overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    #app { display: flex; flex-direction: column; height: 100dvh; }
+
+    /* ── splash ── */
+    #splash {
+      position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+      background: linear-gradient(150deg, var(--primary), var(--secondary));
+      color: #fff; transition: opacity .45s ease;
+    }
+    #splash.hide { opacity: 0; pointer-events: none; }
+    .splash-logo {
+      width: 86px; height: 86px; border-radius: 24px; background: rgba(255,255,255,.18);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 42px; font-weight: 900; backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,.25);
+    }
+    .splash-name { font-size: 22px; font-weight: 800; letter-spacing: -.4px; }
+    .splash-spin { width: 26px; height: 26px; border: 3px solid rgba(255,255,255,.35);
+      border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── header ── */
+    header {
+      flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--line);
+      position: relative; z-index: 10;
+    }
+    .h-back { display: none; background: none; border: none; color: var(--ink); font-size: 22px;
+      cursor: pointer; width: 34px; height: 34px; border-radius: 10px; }
+    .h-back.show { display: flex; align-items: center; justify-content: center; }
+    .h-logo { width: 34px; height: 34px; border-radius: 10px; background: var(--primary);
+      color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900;
+      font-size: 17px; overflow: hidden; }
+    .h-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .h-title { font-size: 17px; font-weight: 800; flex: 1; letter-spacing: -.3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .h-btn { background: none; border: none; color: var(--sub); font-size: 19px; cursor: pointer;
+      width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .h-btn:active { background: var(--bg); }
+
+    /* search bar */
+    .searchbar { padding: 10px 16px 4px; }
+    .searchbar input {
+      width: 100%; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+      border-radius: 13px; padding: 11px 14px; font-size: 15px; outline: none;
+    }
+    .searchbar input:focus { border-color: var(--primary); }
+
+    /* ── screen container ── */
+    main { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; }
+    .screen { animation: slidein .28s cubic-bezier(.22,.61,.36,1); }
+    @keyframes slidein { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+
+    /* ── home grid ── */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; padding: 14px 16px 90px; }
+    .tile {
+      position: relative; border-radius: 20px; padding: 16px; min-height: 120px; cursor: pointer;
+      display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
+      color: #fff; box-shadow: var(--shadow); transition: transform .12s;
+    }
+    .tile:active { transform: scale(.96); }
+    .tile-ico { font-size: 30px; }
+    .tile-label { font-size: 15px; font-weight: 800; letter-spacing: -.2px; }
+    .tile-chip { position: absolute; top: 12px; right: 12px; font-size: 9.5px; font-weight: 800;
+      background: rgba(255,255,255,.25); padding: 3px 8px; border-radius: 999px; text-transform: uppercase;
+      letter-spacing: .4px; }
+    .tile-badge { position: absolute; top: 10px; left: 12px; min-width: 20px; height: 20px;
+      background: #ef4444; color: #fff; border-radius: 999px; font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+
+    .section-title { padding: 16px 16px 4px; font-size: 12px; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── list ── */
+    .list { padding: 8px 14px 90px; }
+    .row {
+      background: var(--card); border: 1px solid var(--line); border-radius: 15px;
+      padding: 14px 15px; margin-bottom: 10px; cursor: pointer; transition: transform .1s;
+    }
+    .row:active { transform: scale(.985); }
+    .row-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .row-title { font-size: 15px; font-weight: 800; color: var(--ink); word-break: break-word; }
+    .row-cells { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    .row-cell { font-size: 12.5px; color: var(--sub); }
+    .row-cell b { color: var(--muted); font-weight: 600; }
+    .badge { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+    .b-ok { background: #dcfce7; color: #15803d; } .b-warn { background: #fef3c7; color: #b45309; }
+    .b-bad { background: #fee2e2; color: #dc2626; } .b-neu { background: #eef2f7; color: #64748b; }
+    [data-theme="dark"] .b-ok{background:#062e1b;color:#4ade80;} [data-theme="dark"] .b-warn{background:#3a2c05;color:#fbbf24;}
+    [data-theme="dark"] .b-bad{background:#3a0d0d;color:#f87171;} [data-theme="dark"] .b-neu{background:#1e2738;color:#94a3b8;}
+
+    .load-more { display: block; margin: 8px auto 0; background: var(--card); border: 1px solid var(--line);
+      color: var(--primary); font-weight: 700; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-size: 13px; }
+
+    /* ── detail ── */
+    .detail { padding: 14px 18px 90px; }
+    .field { padding: 11px 0; border-bottom: 1px solid var(--line); }
+    .field:last-child { border: none; }
+    .field-lbl { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+    .field-val { font-size: 14.5px; margin-top: 3px; word-break: break-word; }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 16px 90px; }
+    .kpi { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+      padding: 18px 16px 14px; overflow: hidden; box-shadow: var(--shadow); }
+    .kpi-bar { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .kpi-val { font-size: 30px; font-weight: 900; letter-spacing: -1.2px; }
+    .kpi-lbl { font-size: 13px; font-weight: 700; color: var(--sub); margin-top: 8px; }
+    .kpi-meta { font-size: 10.5px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .3px; }
+    .kpi-big { grid-column: 1 / -1; text-align: center; padding: 40px 16px; }
+    .kpi-big .kpi-val { font-size: 56px; }
+
+    /* iframe */
+    .frame-wrap { height: 100%; position: relative; }
+    iframe.frame { width: 100%; height: calc(100dvh - 56px); border: none; background: var(--card); }
+    .ext-btn { position: fixed; bottom: 78px; right: 16px; z-index: 30; background: var(--primary);
+      color: #fff; border: none; border-radius: 12px; padding: 11px 16px; font-weight: 700; font-size: 13px; box-shadow: var(--shadow); }
+
+    /* custom html */
+    .html-block { padding: 16px; }
+
+    /* ── states ── */
+    .empty { text-align: center; padding: 64px 24px; color: var(--sub); }
+    .empty-ico { font-size: 42px; margin-bottom: 8px; }
+    .empty h3 { font-size: 16px; color: var(--ink); margin-bottom: 4px; }
+    .empty p { font-size: 13px; line-height: 1.5; }
+    .sk { background: linear-gradient(90deg, var(--line) 25%, var(--card) 50%, var(--line) 75%);
+      background-size: 200% 100%; animation: shimmer 1.3s infinite; border-radius: 8px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .sk-row { height: 64px; border-radius: 15px; margin: 0 14px 10px; }
+
+    /* ── bottom nav ── */
+    nav.bottom { flex: 0 0 auto; display: flex; background: var(--card); border-top: 1px solid var(--line);
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); z-index: 20; }
+    nav.bottom button { flex: 1; background: none; border: none; color: var(--sub); cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; font-size: 10.5px; font-weight: 600; }
+    nav.bottom button.active { color: var(--primary); }
+    nav.bottom .nav-ico { font-size: 20px; }
+
+    /* ── FAB ── */
+    .fab { position: fixed; right: 18px; bottom: 78px; z-index: 30; width: 54px; height: 54px;
+      border-radius: 17px; border: none; background: var(--primary); color: #fff; font-size: 28px;
+      box-shadow: 0 8px 22px rgba(99,102,241,.45); cursor: pointer; }
+    .fab:active { transform: scale(.92); }
+
+    /* ── modal sheet ── */
+    .sheet-bg { position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 40; opacity: 0;
+      transition: opacity .25s; pointer-events: none; }
+    .sheet-bg.show { opacity: 1; pointer-events: auto; }
+    .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; background: var(--bg);
+      border-radius: 22px 22px 0 0; max-height: 90dvh; transform: translateY(100%); transition: transform .3s cubic-bezier(.22,.61,.36,1);
+      display: flex; flex-direction: column; overflow: hidden; }
+    .sheet.show { transform: none; }
+    .sheet-head { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--card); }
+    .sheet-head h3 { flex: 1; font-size: 15px; font-weight: 800; }
+    .sheet-body { overflow-y: auto; }
+    .grab { width: 38px; height: 4px; background: var(--line); border-radius: 99px; margin: 8px auto 2px; }
+
+    /* toast */
+    .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px);
+      background: var(--ink); color: var(--bg); padding: 11px 18px; border-radius: 12px; font-size: 13px; font-weight: 600;
+      z-index: 60; opacity: 0; transition: all .25s; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateX(-50%); }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <div class="splash-logo" id="splashLogo">M</div>
+    <div class="splash-name">{{ app_name }}</div>
+    <div class="splash-spin"></div>
+  </div>
+
+  <div id="app" style="display:none;">
+    <header>
+      <button class="h-back" id="backBtn" aria-label="Back">‹</button>
+      <div class="h-logo" id="hLogo">M</div>
+      <div class="h-title" id="hTitle">{{ app_name }}</div>
+      <button class="h-btn" id="searchBtn" aria-label="Search">⌕</button>
+      <button class="h-btn" id="themeBtn" aria-label="Toggle theme">◐</button>
+    </header>
+    <div class="searchbar" id="searchBar" style="display:none;">
+      <input id="searchInput" placeholder="Search…" autocomplete="off">
+    </div>
+    <main id="main"></main>
+    <nav class="bottom" id="bottomNav" style="display:none;"></nav>
+  </div>
+
+  <button class="fab" id="fab" style="display:none;">+</button>
+
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet" id="sheet">
+    <div class="grab"></div>
+    <div class="sheet-head"><h3 id="sheetTitle"></h3><button class="h-btn" id="sheetClose">✕</button></div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  window.PWA_BOOT = {
+    csrf: {{ csrf_token | tojson }},
+    user: {{ boot_user | tojson }},
+    app_name: {{ app_name | tojson }},
+    version: {{ pwa_version | tojson }}
+  };
+  </script>
+  <script src="/assets/midhunatech/js/pwa_app.js"></script>
+</body>
+</html>

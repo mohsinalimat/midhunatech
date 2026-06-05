@@ -10,12 +10,33 @@
   "icon",
   "color",
   "col_break_1",
-  "route_path",
+  "gradient_from",
+  "gradient_to",
   "module_type",
-  "target_url",
-  "col_break_2",
   "display_order",
-  "is_enabled"
+  "is_enabled",
+  "section_source",
+  "doctype_name",
+  "doctype_filters",
+  "doctype_fields",
+  "report_name",
+  "report_filters",
+  "number_card_name",
+  "dashboard_name",
+  "col_break_src",
+  "webpage_route",
+  "external_url",
+  "custom_html_block",
+  "open_in_modal",
+  "badge_count_method",
+  "section_bottom_nav",
+  "show_in_bottom_nav",
+  "bottom_nav_icon",
+  "col_break_nav",
+  "bottom_nav_label",
+  "bottom_nav_order",
+  "section_computed",
+  "target_url"
  ],
  "fields": [
   {
@@ -24,7 +45,7 @@
    "label": "Display Label",
    "reqd": 1,
    "in_list_view": 1,
-   "description": "What the user sees on the tile. E.g. 'Leave Request'"
+   "description": "Tile text. E.g. 'Leave Request'"
   },
   {
    "fieldname": "module_name",
@@ -32,71 +53,194 @@
    "label": "Module Key",
    "reqd": 1,
    "in_list_view": 1,
-   "description": "Unique internal slug — no spaces, use underscores. E.g. leave_request"
+   "description": "Unique slug, no spaces. E.g. leave_request"
   },
   {
    "fieldname": "icon",
-   "fieldtype": "Select",
-   "label": "Icon",
-   "options": "calendar\ncheck-circle\nclipboard\nusers\nbriefcase\ndollar\nclock\nfile\nsettings\nstar\nbell\nlocation\nchart\nbox\nshield\nheart\nmail\nphone\nhome\ngrid\ntrend-up\ntask\nreport",
-   "default": "grid",
+   "fieldtype": "Data",
+   "label": "Icon (emoji)",
+   "default": "⌘",
    "in_list_view": 1,
-   "description": "Maps to a built-in emoji icon in the PWA"
+   "description": "Any emoji, e.g. 📅 💰 👥 📊"
   },
   {
    "fieldname": "color",
    "fieldtype": "Color",
-   "label": "Tile Color",
-   "default": "#6366f1",
-   "description": "Background tint color for the tile icon"
+   "label": "Icon Color",
+   "default": "#6366f1"
   },
   {
    "fieldname": "col_break_1",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "route_path",
-   "fieldtype": "Data",
-   "label": "Route Path",
-   "reqd": 1,
-   "in_list_view": 1,
-   "description": "URL slug — must start with /. E.g. /leave or /attendance"
+   "fieldname": "gradient_from",
+   "fieldtype": "Color",
+   "label": "Gradient From",
+   "default": "#6366f1"
+  },
+  {
+   "fieldname": "gradient_to",
+   "fieldtype": "Color",
+   "label": "Gradient To",
+   "default": "#8b5cf6"
   },
   {
    "fieldname": "module_type",
    "fieldtype": "Select",
    "label": "Module Type",
-   "options": "frappe_page\niframe_url\ncustom_view\ndoc_list\ndashboard",
-   "default": "frappe_page",
+   "options": "doctype\nlist_view\nform_view\nreport\nnumber_card\ndashboard\nwebpage\ncustom_html\nurl\ndoc_list\nfrappe_page\niframe_url\ncustom_view",
+   "default": "doctype",
    "reqd": 1,
-   "in_list_view": 1,
-   "description": "frappe_page = Frappe desk URL in fullscreen iframe | iframe_url = any HTTPS URL | custom_view = built-in Vue component | doc_list = native mobile list/detail for a doctype"
-  },
-  {
-   "fieldname": "target_url",
-   "fieldtype": "Data",
-   "label": "Target URL",
-   "description": "frappe_page: /app/leave-application | iframe_url: https://... | custom_view: leave blank | doc_list: the Doctype name, e.g. Sales Order | dashboard: a Dashboard name, comma-separated Number Card names, or blank for all"
-  },
-  {
-   "fieldname": "col_break_2",
-   "fieldtype": "Column Break"
+   "in_list_view": 1
   },
   {
    "fieldname": "display_order",
    "fieldtype": "Int",
    "label": "Display Order",
-   "default": 1,
-   "in_list_view": 1,
-   "description": "Lower number appears first on home screen"
+   "default": "1",
+   "in_list_view": 1
   },
   {
    "fieldname": "is_enabled",
    "fieldtype": "Check",
    "label": "Enabled",
-   "default": 1,
-   "in_list_view": 1,
-   "description": "Uncheck to hide from mobile app without deleting"
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "section_source",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "fieldname": "doctype_name",
+   "fieldtype": "Link",
+   "options": "DocType",
+   "label": "DocType",
+   "depends_on": "eval:['doctype','list_view','form_view'].includes(doc.module_type)"
+  },
+  {
+   "fieldname": "doctype_filters",
+   "fieldtype": "Code",
+   "options": "JSON",
+   "label": "Filters (JSON)",
+   "depends_on": "eval:['doctype','list_view'].includes(doc.module_type)"
+  },
+  {
+   "fieldname": "doctype_fields",
+   "fieldtype": "Code",
+   "options": "JSON",
+   "label": "Fields (JSON array)",
+   "depends_on": "eval:['doctype','list_view'].includes(doc.module_type)"
+  },
+  {
+   "fieldname": "report_name",
+   "fieldtype": "Link",
+   "options": "Report",
+   "label": "Report",
+   "depends_on": "eval:doc.module_type=='report'"
+  },
+  {
+   "fieldname": "report_filters",
+   "fieldtype": "Code",
+   "options": "JSON",
+   "label": "Report Filters (JSON)",
+   "depends_on": "eval:doc.module_type=='report'"
+  },
+  {
+   "fieldname": "number_card_name",
+   "fieldtype": "Link",
+   "options": "Number Card",
+   "label": "Number Card",
+   "depends_on": "eval:doc.module_type=='number_card'"
+  },
+  {
+   "fieldname": "dashboard_name",
+   "fieldtype": "Link",
+   "options": "Dashboard",
+   "label": "Dashboard",
+   "depends_on": "eval:doc.module_type=='dashboard'"
+  },
+  {
+   "fieldname": "col_break_src",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "webpage_route",
+   "fieldtype": "Data",
+   "label": "Webpage Route",
+   "depends_on": "eval:doc.module_type=='webpage'",
+   "description": "Frappe Web Page route, e.g. mt-about"
+  },
+  {
+   "fieldname": "external_url",
+   "fieldtype": "Data",
+   "label": "External URL",
+   "depends_on": "eval:doc.module_type=='url'"
+  },
+  {
+   "fieldname": "custom_html_block",
+   "fieldtype": "Code",
+   "options": "HTML",
+   "label": "Custom HTML",
+   "depends_on": "eval:doc.module_type=='custom_html'"
+  },
+  {
+   "fieldname": "open_in_modal",
+   "fieldtype": "Check",
+   "label": "Open in Slide-up Sheet",
+   "default": "0"
+  },
+  {
+   "fieldname": "badge_count_method",
+   "fieldtype": "Data",
+   "label": "Badge Count Method",
+   "description": "Dotted path to a whitelisted method returning an int, e.g. midhunatech.api.pwa_api.my_open_count"
+  },
+  {
+   "fieldname": "section_bottom_nav",
+   "fieldtype": "Section Break",
+   "label": "Bottom Navigation",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "show_in_bottom_nav",
+   "fieldtype": "Check",
+   "label": "Show in Bottom Nav",
+   "default": "0"
+  },
+  {
+   "fieldname": "bottom_nav_icon",
+   "fieldtype": "Data",
+   "label": "Bottom Nav Icon (emoji)"
+  },
+  {
+   "fieldname": "col_break_nav",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bottom_nav_label",
+   "fieldtype": "Data",
+   "label": "Bottom Nav Label"
+  },
+  {
+   "fieldname": "bottom_nav_order",
+   "fieldtype": "Int",
+   "label": "Bottom Nav Order",
+   "default": "1"
+  },
+  {
+   "fieldname": "section_computed",
+   "fieldtype": "Section Break",
+   "label": "Computed"
+  },
+  {
+   "fieldname": "target_url",
+   "fieldtype": "Data",
+   "label": "Target URL (auto)",
+   "read_only": 1,
+   "description": "Auto-computed from the module type on save"
   }
  ],
  "istable": 1,

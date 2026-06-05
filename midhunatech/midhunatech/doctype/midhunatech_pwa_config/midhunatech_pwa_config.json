@@ -7,9 +7,21 @@
  "engine": "InnoDB",
  "field_order": [
   "app_name",
+  "logo",
   "col_break_1",
   "theme_color",
   "primary_color",
+  "secondary_color",
+  "accent_color",
+  "section_features",
+  "bottom_nav_enabled",
+  "splash_screen_enabled",
+  "col_break_feat",
+  "offline_mode_enabled",
+  "pwa_version",
+  "section_advanced",
+  "custom_css",
+  "custom_js",
   "section_modules",
   "modules"
  ],
@@ -20,7 +32,13 @@
    "label": "App Name",
    "reqd": 1,
    "default": "Midhunatech",
-   "description": "Displayed on login screen and home header (text only, no image needed)"
+   "description": "Displayed on the splash screen and home header"
+  },
+  {
+   "fieldname": "logo",
+   "fieldtype": "Attach Image",
+   "label": "Logo",
+   "description": "Optional logo shown in the header / splash (falls back to app initials)"
   },
   {
    "fieldname": "col_break_1",
@@ -31,26 +49,90 @@
    "fieldtype": "Color",
    "label": "Theme Color",
    "default": "#6366f1",
-   "description": "Browser address bar and PWA splash screen color"
+   "description": "Browser address bar / splash color"
   },
   {
    "fieldname": "primary_color",
    "fieldtype": "Color",
-   "label": "Primary UI Color",
-   "default": "#6366f1",
-   "description": "Buttons, active nav items, icon highlights"
+   "label": "Primary Color",
+   "default": "#6366f1"
+  },
+  {
+   "fieldname": "secondary_color",
+   "fieldtype": "Color",
+   "label": "Secondary Color",
+   "default": "#8b5cf6"
+  },
+  {
+   "fieldname": "accent_color",
+   "fieldtype": "Color",
+   "label": "Accent Color",
+   "default": "#22c55e"
+  },
+  {
+   "fieldname": "section_features",
+   "fieldtype": "Section Break",
+   "label": "Features"
+  },
+  {
+   "fieldname": "bottom_nav_enabled",
+   "fieldtype": "Check",
+   "label": "Bottom Navigation Bar",
+   "default": "1"
+  },
+  {
+   "fieldname": "splash_screen_enabled",
+   "fieldtype": "Check",
+   "label": "Splash Screen",
+   "default": "1"
+  },
+  {
+   "fieldname": "col_break_feat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "offline_mode_enabled",
+   "fieldtype": "Check",
+   "label": "Offline Mode (Service Worker)",
+   "default": "1"
+  },
+  {
+   "fieldname": "pwa_version",
+   "fieldtype": "Data",
+   "label": "PWA Version",
+   "read_only": 1,
+   "default": "1.0.0",
+   "description": "Auto-incremented on every save"
+  },
+  {
+   "fieldname": "section_advanced",
+   "fieldtype": "Section Break",
+   "label": "Advanced",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "custom_css",
+   "fieldtype": "Code",
+   "label": "Custom CSS",
+   "options": "CSS"
+  },
+  {
+   "fieldname": "custom_js",
+   "fieldtype": "Code",
+   "label": "Custom JS",
+   "options": "JS"
   },
   {
    "fieldname": "section_modules",
    "fieldtype": "Section Break",
-   "label": "PWA Modules — What appears on the mobile home screen"
+   "label": "Modules — tiles on the PWA home screen"
   },
   {
    "fieldname": "modules",
    "fieldtype": "Table",
    "label": "Modules",
    "options": "Midhunatech PWA Module",
-   "description": "Each row = one tile on the mobile home screen. Toggle Enabled to show/hide instantly."
+   "description": "Each row = one tile. Toggle Enabled to show/hide instantly."
   }
  ],
  "icon": "smartphone",
