@@ -67,7 +67,7 @@ def _pick_amount_field(meta):
     return None
 
 
-def _list_fields(meta, title_field, status_field, amount_field, date_field):
+def _list_fields(meta, title_field, status_field, amount_field, date_field, permitted=None):
     """Up to 3 secondary fields shown under the title on each card."""
     used = {title_field, status_field, amount_field, date_field, "name"}
     out = []
@@ -75,6 +75,8 @@ def _list_fields(meta, title_field, status_field, amount_field, date_field):
         if len(out) >= 3:
             break
         if df.fieldname in used or df.fieldname in _SKIP:
+            continue
+        if permitted is not None and df.fieldname not in permitted:
             continue
         if df.fieldtype in _LAYOUT or df.hidden:
             continue
@@ -110,17 +112,38 @@ def _fmt(df, value):
     return str(value)
 
 
+def _permitted_fields(meta, ptype="read"):
+    """Fieldnames the current user may access at their permlevel — so restricted
+    fields (e.g. salary at permlevel 1) are never leaked. Falls back to
+    permlevel-0 fields if the framework helper is unavailable."""
+    try:
+        allowed = set(meta.get_permitted_fieldnames(permission_type=ptype) or [])
+    except Exception:
+        allowed = {df.fieldname for df in meta.fields if int(df.permlevel or 0) == 0}
+    allowed.add("name")
+    return allowed
+
+
 # ── view config + number cards ─────────────────────────────────────────────────
 
 @frappe.whitelist()
 def get_view(doctype, label=None):
     meta = _require_read(doctype)
+    perm = _permitted_fields(meta)
 
     title_field  = meta.title_field or "name"
+    if title_field not in perm:
+        title_field = "name"
     status_field = _pick_status_field(meta)
+    if status_field and status_field not in perm:
+        status_field = None
     amount_field = _pick_amount_field(meta)
+    if amount_field and amount_field not in perm:
+        amount_field = None
     date_field   = _pick_date_field(meta)
-    sec_fields   = _list_fields(meta, title_field, status_field, amount_field, date_field)
+    if date_field not in perm:
+        date_field = "modified"
+    sec_fields   = _list_fields(meta, title_field, status_field, amount_field, date_field, perm)
 
     fields_meta = []
     for fn in sec_fields:
@@ -188,14 +211,23 @@ def _cards(doctype, meta, status_field, date_field):
 @frappe.whitelist()
 def get_list(doctype, search=None, start=0, page_length=20):
     meta = _require_read(doctype)
+    perm = _permitted_fields(meta)
     start = int(start or 0)
     page_length = min(int(page_length or 20), 100)
 
     title_field  = meta.title_field or "name"
+    if title_field not in perm:
+        title_field = "name"
     status_field = _pick_status_field(meta)
+    if status_field and status_field not in perm:
+        status_field = None
     amount_field = _pick_amount_field(meta)
+    if amount_field and amount_field not in perm:
+        amount_field = None
     date_field   = _pick_date_field(meta)
-    sec_fields   = _list_fields(meta, title_field, status_field, amount_field, date_field)
+    if date_field not in perm:
+        date_field = "modified"
+    sec_fields   = _list_fields(meta, title_field, status_field, amount_field, date_field, perm)
 
     wanted = ["name"]
     for f in [title_field, status_field, amount_field, date_field, *sec_fields]:
@@ -244,13 +276,16 @@ def get_doc(doctype, name):
     meta = _require_read(doctype)
     doc = frappe.get_doc(doctype, name)
     doc.check_permission("read")
+    perm = _permitted_fields(meta)
 
     title_field = meta.title_field or "name"
+    if title_field not in perm:
+        title_field = "name"
     fields = []
     for df in meta.fields:
         if df.fieldname in _SKIP or df.fieldtype in _LAYOUT or df.hidden:
             continue
-        if df.fieldtype in ("Password",):
+        if df.fieldtype in ("Password",) or df.fieldname not in perm:
             continue
         val = doc.get(df.fieldname)
         if val in (None, "", 0) and df.fieldtype not in ("Check", "Currency", "Float", "Int"):
@@ -286,6 +321,7 @@ def get_create_meta(doctype):
         frappe.throw(_("You are not permitted to create {0}").format(doctype),
                      frappe.PermissionError)
     meta = frappe.get_meta(doctype)
+    perm = _permitted_fields(meta, "write")
 
     for df in meta.fields:
         if df.fieldtype in ("Table", "Table MultiSelect") and df.reqd:
@@ -299,7 +335,7 @@ def get_create_meta(doctype):
             return
         if df.fieldtype not in _CREATE_TYPES or df.fieldtype == "Read Only":
             return
-        if df.hidden or df.read_only:
+        if df.hidden or df.read_only or df.fieldname not in perm:
             return
         seen.add(df.fieldname)
         fields.append({
@@ -349,11 +385,14 @@ def create_doc(doctype, values):
         frappe.throw(_("You are not permitted to create {0}").format(doctype),
                      frappe.PermissionError)
     meta = frappe.get_meta(doctype)
-    allowed = {df.fieldname for df in meta.fields}
+    # Only accept fields the user is allowed to write (respects permlevel) — so a
+    # crafted request can't set restricted fields the form never exposed.
+    writable = _permitted_fields(meta, "write")
+    skip = _SKIP | {"owner", "creation", "modified", "modified_by", "docstatus"}
 
     doc = frappe.new_doc(doctype)
     for key, val in (values or {}).items():
-        if key in allowed and val not in (None, ""):
+        if key in writable and key not in skip and val not in (None, ""):
             doc.set(key, val)
     doc.insert()
     frappe.db.commit()
