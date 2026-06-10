@@ -229,7 +229,14 @@ defineExpose({ reload: load });
 .ap-t td { padding: 8px 10px; border-top: 1px solid #f1f5f9; color: #1e293b; white-space: nowrap; }
 
 .ap-err { margin-top: 14px; background: #fef2f2; color: #dc2626; font-size: 13px; border-radius: 10px; padding: 10px 12px; }
-.ap-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.ap-actions {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  position: sticky; bottom: 0; z-index: 5;
+  margin: 18px -16px 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid #eef2f7;
+}
 .ap-btn {
   flex: 1; min-width: 120px; height: 48px; border: none; border-radius: 14px;
   font-size: 15px; font-weight: 800; color: #fff; cursor: pointer;
