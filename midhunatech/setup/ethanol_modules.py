@@ -94,6 +94,33 @@ def _inject_iframe_chrome():
     print("Injected iframe chrome-hider into Website Settings head_html.")
 
 
+# bottom-nav tabs (the app renders max 3 custom tabs): route -> (icon, label, order)
+NAV = {
+    "san": ("🏭", "Plant", 1),
+    "quality": ("🔬", "Quality", 3),
+}
+
+# non-webpage tiles: in-app approvals + a native report
+EXTRA_TILES = [
+    {
+        "module_name": "approvals", "label": "Approvals", "icon": "✅",
+        "module_type": "custom_view",
+        "color": "#16a34a", "gradient_from": "#166534", "gradient_to": "#4ade80",
+        "badge_count_method": "midhunatech.api.approvals.pending_count",
+        "show_in_bottom_nav": 1, "bottom_nav_icon": "✅",
+        "bottom_nav_label": "Approvals", "bottom_nav_order": 2,
+        "is_enabled": 1,
+    },
+    {
+        "module_name": "production_summary", "label": "Production Summary", "icon": "📊",
+        "module_type": "report",
+        "report_name": "Production Summary", "target_url": "Production Summary",
+        "color": "#1d4ed8", "gradient_from": "#1e40af", "gradient_to": "#60a5fa",
+        "is_enabled": 1,
+    },
+]
+
+
 def setup():
     """Rebrand the PWA and replace the home grid with the plant web pages."""
     _inject_iframe_chrome()
@@ -106,9 +133,9 @@ def setup():
         if hasattr(cfg, field):
             cfg.set(field, value)
 
-    cfg.set("modules", [])
-    for order, (route, label, icon, gfrom, gto) in enumerate(PAGES, start=1):
-        cfg.append("modules", {
+    rows = []
+    for route, label, icon, gfrom, gto in PAGES:
+        row = {
             "module_name": route.replace("-", "_").replace("%", "_").lower(),
             "label": label,
             "icon": icon,
@@ -117,10 +144,28 @@ def setup():
             "gradient_to": gto,
             "module_type": "iframe_url",
             "target_url": f"/{route}",
-            "display_order": order,
             "is_enabled": 1,
-        })
+        }
+        if route in NAV:
+            nav_icon, nav_label, nav_order = NAV[route]
+            row.update({
+                "show_in_bottom_nav": 1,
+                "bottom_nav_icon": nav_icon,
+                "bottom_nav_label": nav_label,
+                "bottom_nav_order": nav_order,
+            })
+        rows.append(row)
+
+    # Approvals right after the Plant Overview hub, report at the end
+    rows.insert(1, EXTRA_TILES[0])
+    rows.append(EXTRA_TILES[1])
+
+    cfg.set("modules", [])
+    for order, row in enumerate(rows, start=1):
+        row["display_order"] = order
+        cfg.append("modules", row)
 
     cfg.save(ignore_permissions=True)
     frappe.db.commit()
-    print(f"PWA configured: app_name='{APP_NAME}', {len(PAGES)} webpage tiles.")
+    print(f"PWA configured: app_name='{APP_NAME}', {len(rows)} tiles "
+          f"({len(PAGES)} webpages + approvals + report).")

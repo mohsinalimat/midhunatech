@@ -62,11 +62,8 @@
       <template v-if="session.is_system_manager">
         <div class="section-title">Admin</div>
         <ion-list lines="inset" class="info-list">
-          <ion-item button detail @click="openConfig">
-            <ion-label color="primary">⚙ Configure PWA Modules</ion-label>
-          </ion-item>
-          <ion-item button detail @click="openDesk">
-            <ion-label color="primary">🖥 Open ERPNext Desk</ion-label>
+          <ion-item button detail @click="router.push('/midhunatech/settings')">
+            <ion-label color="primary">⚙ App Settings — tiles, tabs &amp; branding</ion-label>
           </ion-item>
         </ion-list>
       </template>
@@ -195,8 +192,6 @@ async function handleLogout() {
   }
 }
 
-function openConfig() { window.open("/app/midhunatech-pwa-config", "_blank", "noopener"); }
-function openDesk()   { window.open("/app",                         "_blank", "noopener"); }
 </script>
 
 <style scoped>

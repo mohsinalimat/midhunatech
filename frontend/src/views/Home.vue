@@ -11,7 +11,15 @@
           </span>
           <span v-else class="mt-wordmark">Midhuna<span class="accent">tech</span></span>
         </div>
-        <div slot="end" style="padding-right:14px;">
+        <div slot="end" style="padding-right:14px;display:flex;align-items:center;gap:10px;">
+          <button
+            class="mt-bell"
+            aria-label="Notifications"
+            @click="router.push('/midhunatech/notifications')"
+          >
+            🔔
+            <span v-if="notify.unread" class="mt-bell-badge">{{ notify.unread > 99 ? "99+" : notify.unread }}</span>
+          </button>
           <div
             class="mt-avatar"
             :style="{ background: appConfig.primary_color }"
@@ -124,7 +132,7 @@
       <div v-else-if="appConfig.modules.length === 0" class="empty-state">
         <div class="empty-icon" aria-hidden="true">⊞</div>
         <h3>No modules yet</h3>
-        <p>Go to ERPNext desk → <strong>Midhunatech PWA Config</strong> → add module rows to show them here.</p>
+        <p>Open <strong>App Settings</strong> to add your first tile.</p>
         <ion-button v-if="session.is_system_manager" fill="outline" size="small" @click="openConfig" style="margin-top:12px;">
           Configure now ↗
         </ion-button>
@@ -167,6 +175,7 @@ import {
   IonRefresher, IonRefresherContent, IonSkeletonText, IonButton,
 } from "@ionic/vue";
 import { session, appConfig, loadConfig, hexAlpha } from "@/data/session.js";
+import { notify, loadFeed } from "@/data/notify.js";
 import {
   checkin, loadDashboard, toggleCheckin, getCoords,
   formatDuration, formatTime,
@@ -196,6 +205,7 @@ const liveWorked = computed(() => {
 onMounted(() => {
   loadConfig();
   loadDashboard();
+  loadFeed();
   timer = setInterval(() => { now.value = Date.now(); }, 1000);
 });
 onUnmounted(() => clearInterval(timer));
@@ -222,7 +232,7 @@ function openModule(mod) {
   router.push(`/midhunatech/module/${encodeURIComponent(mod.name)}`);
 }
 function openConfig() {
-  window.open("/app/midhunatech-pwa-config", "_blank");
+  router.push("/midhunatech/settings");
 }
 
 function typeLabel(t) {
@@ -245,6 +255,21 @@ function iconChar(name) {
 </script>
 
 <style scoped>
+.mt-bell {
+  position: relative;
+  width: 38px; height: 38px;
+  border: none; background: #f1f5f9; border-radius: 50%;
+  font-size: 17px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.mt-bell-badge {
+  position: absolute; top: -3px; right: -4px;
+  min-width: 17px; height: 17px; padding: 0 4px;
+  background: #ef4444; color: #fff;
+  font-size: 10px; font-weight: 800; line-height: 17px;
+  border-radius: 999px; text-align: center;
+}
+
 .ci-wrap { padding: 14px 16px 4px; }
 
 .ci-card {

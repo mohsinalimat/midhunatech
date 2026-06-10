@@ -91,9 +91,16 @@ def get_config():
             "icon":   row.icon   or "grid",
             "color":  row.color  or "#6366f1",
             "route":  row.get("route_path"),
-            "type":   row.module_type,        # frappe_page | iframe_url | custom_view
+            "type":   row.module_type,        # frappe_page | iframe_url | custom_view | doc_list | dashboard | report
             "url":    row.target_url or "",
             "order":  int(row.display_order or 0),
+            "report": row.get("report_name"),
+            "report_filters": row.get("report_filters"),
+            "badge_method": row.get("badge_count_method"),
+            "nav":        int(row.get("show_in_bottom_nav") or 0),
+            "nav_icon":   row.get("bottom_nav_icon"),
+            "nav_label":  row.get("bottom_nav_label"),
+            "nav_order":  int(row.get("bottom_nav_order") or 0),
         })
 
     modules.sort(key=lambda x: x["order"])

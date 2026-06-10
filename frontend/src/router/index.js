@@ -22,6 +22,10 @@ const routes = [
       { path: "home",    name: "Home",    component: () => import("@/views/Home.vue") },
       { path: "checkin", name: "Checkin", component: () => import("@/views/Checkin.vue") },
       { path: "profile", name: "Profile", component: () => import("@/views/Profile.vue") },
+      { path: "notifications", name: "Notifications", component: () => import("@/views/Notifications.vue") },
+      { path: "settings", name: "Settings", component: () => import("@/views/Settings.vue") },
+      // module opened from a bottom-nav tab — keeps the tab bar visible
+      { path: "m/:slug", name: "TabModule", component: () => import("@/views/ModuleView.vue") },
     ],
   },
 

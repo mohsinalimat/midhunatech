@@ -28,7 +28,7 @@
 
       <!-- Pull to refresh — native doc_list only -->
       <ion-refresher
-        v-if="currentMod && (currentMod.type === 'doc_list' || currentMod.type === 'dashboard')"
+        v-if="currentMod && ['doc_list', 'dashboard', 'report', 'custom_view'].includes(currentMod.type)"
         slot="fixed"
         @ionRefresh="onDocRefresh"
       >
@@ -85,6 +85,15 @@
         :target="currentMod.url"
       />
 
+      <!-- ── NATIVE REPORT: any Frappe report as a mobile table ── -->
+      <ReportView
+        v-else-if="currentMod.type === 'report'"
+        ref="docListRef"
+        :key="currentMod.report || currentMod.url"
+        :report="currentMod.report || currentMod.url"
+        :filters="parsedReportFilters"
+      />
+
       <!-- ── CUSTOM VIEW: dynamic Vue component ── -->
       <Suspense v-else-if="currentMod.type === 'custom_view'">
         <!-- Loaded component -->
@@ -122,6 +131,7 @@ import { openOutline, chevronBackOutline } from "ionicons/icons";
 import { appConfig } from "@/data/session.js";
 import DocList from "@/views/modules/DocList.vue";
 import DashboardView from "@/views/modules/DashboardView.vue";
+import ReportView from "@/views/modules/ReportView.vue";
 
 const route       = useRoute();
 const iframeReady = ref(false);
@@ -136,6 +146,12 @@ const slug = computed(() => decodeURIComponent(route.params.slug || ""));
 const currentMod = computed(() =>
   appConfig.modules.find(m => m.name === slug.value) || null
 );
+
+// optional default filters for report modules (JSON string in config)
+const parsedReportFilters = computed(() => {
+  try { return JSON.parse(currentMod.value?.report_filters || "{}"); }
+  catch { return {}; }
+});
 
 // Reset iframe loaded state whenever we navigate to a different module
 watch(slug, () => { iframeReady.value = false; });
