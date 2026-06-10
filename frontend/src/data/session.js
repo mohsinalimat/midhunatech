@@ -139,6 +139,17 @@ export async function loadConfig(force = false) {
     const d = await r.json();
     const c = d.message;
 
+    // self-update: if the server has a newer build than the one this page
+    // booted with, reload once — even a tab that was never closed catches up.
+    if (c.build_v && boot.build_v && c.build_v !== boot.build_v) {
+      const k = `mt_reloaded_${c.build_v}`;
+      if (!sessionStorage.getItem(k)) {
+        sessionStorage.setItem(k, "1");
+        window.location.reload();
+        return;
+      }
+    }
+
     appConfig.app_name      = c.app_name;
     appConfig.theme_color   = c.theme_color;
     appConfig.primary_color = c.primary_color;

@@ -70,6 +70,17 @@ def check_app_permission():
 
 # ── Whitelisted API methods ────────────────────────────────────────────────────
 
+def _build_version():
+    """mtime of the built bundle — clients compare this against the version
+    they booted with and reload themselves when it changes."""
+    import os
+
+    try:
+        return int(os.path.getmtime(frappe.get_app_path("midhunatech", "public", "frontend", "index.js")))
+    except Exception:
+        return 1
+
+
 @frappe.whitelist()
 def get_config():
     """
@@ -114,6 +125,7 @@ def get_config():
         "theme_color":   cfg.theme_color   or "#6366f1",
         "primary_color": cfg.primary_color or "#6366f1",
         "show_attendance": show_attendance,
+        "build_v":       _build_version(),
         "modules":       modules,
         "user":          frappe.session.user,
         "fullname":      user.full_name or frappe.session.user,
