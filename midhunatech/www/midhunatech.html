@@ -16,7 +16,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/midhunatech/frontend/icon-192.png">
 
 {# ── App CSS bundle (produced by vite build) ──────────────────────────────── #}
-<link rel="stylesheet" href="/assets/midhunatech/frontend/index.css">
+<link rel="stylesheet" href="/assets/midhunatech/frontend/index.css?v={{ build_v }}">
 {%- endblock -%}
 
 {%- block page_content %}
@@ -41,7 +41,7 @@ window.__MT__ = {
 </script>
 
 {# ── App JS bundle (produced by vite build) ───────────────────────────────── #}
-<script type="module" src="/assets/midhunatech/frontend/index.js"></script>
+<script type="module" src="/assets/midhunatech/frontend/index.js?v={{ build_v }}"></script>
 {%- endblock -%}
 
 {%- block style %}

@@ -1,11 +1,23 @@
 # Copyright (c) 2024, Midhunatech and Contributors
 # License: GPL-3.0
 
+import os
+
 import frappe
 
 # module-level no_cache = 1 is the v16 pattern (same as HRMS)
 # prevents Frappe from caching this page's rendered HTML
 no_cache = 1
+
+
+def _build_version():
+    """mtime of the built bundle — busts the browser HTTP cache on every
+    yarn build, so users always get the latest app without a hard refresh."""
+    try:
+        path = frappe.get_app_path("midhunatech", "public", "frontend", "index.js")
+        return int(os.path.getmtime(path))
+    except Exception:
+        return 1
 
 
 def get_context(context):
@@ -34,3 +46,4 @@ def get_context(context):
     context.session_user  = frappe.session.user
     context.session_fname = frappe.utils.get_fullname(frappe.session.user)
     context.site_name     = frappe.local.site
+    context.build_v       = _build_version()
