@@ -8,13 +8,25 @@ import frappe
 # Only seeded if the target Doctype exists on the site (skips HRMS/ERPNext
 # doctypes that aren't installed).
 NATIVE_MODULES = [
-    ("Sales Order",   "sales_order",   "dollar",       "#22c55e", "/sales_order",   "Sales Order"),
-    ("Stock Entry",   "stock_entry",   "box",          "#f59e0b", "/stock_entry",   "Stock Entry"),
-    ("Attendance",    "attendance",    "clock",        "#3b82f6", "/attendance",    "Attendance"),
-    ("Leave Request", "leave_request", "calendar",     "#ec4899", "/leave_request", "Leave Application"),
-    ("Expense Claim", "expense_claim", "report",       "#8b5cf6", "/expense_claim", "Expense Claim"),
-    ("My Tasks",      "my_tasks",      "check-circle", "#10b981", "/my_tasks",      "Task"),
-    ("Team",          "team",          "users",        "#f97316", "/team",          "Employee"),
+    ("Sales Order",      "sales_order",      "dollar",       "#22c55e", "/sales_order",      "Sales Order"),
+    ("Stock Entry",      "stock_entry",      "box",          "#f59e0b", "/stock_entry",      "Stock Entry"),
+    ("Material Request", "material_request", "box",          "#0ea5e9", "/material_request", "Material Request"),
+    ("Attendance",       "attendance",       "clock",        "#3b82f6", "/attendance",       "Attendance"),
+    ("Leave Request",    "leave_request",    "calendar",     "#ec4899", "/leave_request",    "Leave Application"),
+    ("Expense Claim",    "expense_claim",    "report",       "#8b5cf6", "/expense_claim",    "Expense Claim"),
+    ("My Tasks",         "my_tasks",         "check-circle", "#10b981", "/my_tasks",         "Task"),
+    ("Team",             "team",             "users",        "#f97316", "/team",             "Employee"),
+]
+
+# Report tiles seeded on install — only if the Report exists (i.e. ERPNext
+# is installed). They get the mobile KPI cards / chart / filter bar for free.
+# (label, module_name, icon, report_name)
+REPORT_MODULES = [
+    ("Balance Sheet",  "balance_sheet",   "📊", "Balance Sheet"),
+    ("Profit & Loss",  "pl_statement",    "📈", "Profit and Loss Statement"),
+    ("Trial Balance",  "trial_balance",   "⚖️", "Trial Balance"),
+    ("General Ledger", "general_ledger",  "📒", "General Ledger"),
+    ("Stock Balance",  "stock_balance",   "📦", "Stock Balance"),
 ]
 
 
@@ -130,6 +142,41 @@ def seed_default_modules():
             "route_path":    route,
             "module_type":   "doc_list",
             "target_url":    doctype,
+            "display_order": order,
+            "is_enabled":    1,
+        })
+        added.append(label)
+
+    # Approvals (generic — works with whatever Workflows the site activates)
+    if "approvals" not in existing:
+        order += 1
+        cfg.append("modules", {
+            "label":         "Approvals",
+            "module_name":   "approvals",
+            "icon":          "✅",
+            "color":         "#16a34a",
+            "route_path":    "/approvals",
+            "module_type":   "custom_view",
+            "display_order": order,
+            "is_enabled":    1,
+        })
+        added.append("Approvals")
+
+    # Financial / stock report tiles (need ERPNext)
+    for label, key, icon, report in REPORT_MODULES:
+        if key in existing:
+            continue
+        if not frappe.db.exists("Report", report):
+            continue
+        order += 1
+        cfg.append("modules", {
+            "label":         label,
+            "module_name":   key,
+            "icon":          icon,
+            "route_path":    f"/{key}",
+            "module_type":   "report",
+            "report_name":   report,
+            "target_url":    f"/app/query-report/{report}",
             "display_order": order,
             "is_enabled":    1,
         })
